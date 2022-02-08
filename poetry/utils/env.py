@@ -1395,21 +1395,24 @@ class VirtualEnv(Env):
 
     def get_supported_tags(self):  # type: () -> List[Tag]
         file_path = Path(packaging.tags.__file__)
-        if file_path.suffix == ".pyc":
-            # Python 2
-            file_path = file_path.with_suffix(".py")
+        file_folder = file_path.parent
+        script = ""
 
-        with file_path.open(encoding="utf-8") as f:
-            script = decode(f.read())
-
-        script = script.replace(
-            "from ._typing import TYPE_CHECKING, cast",
-            "TYPE_CHECKING = False\ncast = lambda type_, value: value",
-        )
-        script = script.replace(
-            "from ._typing import MYPY_CHECK_RUNNING, cast",
-            "MYPY_CHECK_RUNNING = False\ncast = lambda type_, value: value",
-        )
+        for script_file, script_patches in [(
+                Path(file_folder / "_manylinux.py"),
+                []
+            ), (
+                Path(file_folder / "_musllinux.py"),
+                [('if __name__ == "__main__":', "if False:")]
+            ), (
+                file_path,
+                [("from . import _manylinux, _musllinux", "")],
+            )]:
+            with script_file.open(encoding="utf-8") as f:
+                script_segment = decode(f.read())
+                for patch in script_patches:
+                    script_segment = script_segment.replace(patch[0], patch[1])
+                script += script_segment
 
         script += textwrap.dedent(
             """
