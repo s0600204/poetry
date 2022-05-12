@@ -80,6 +80,7 @@ class Chooser:
                 "Unable to find installation candidates for {}".format(package)
             )
 
+        print(f"\n >>> {package.name} :: {chosen}")
         return chosen
 
     def _get_links(self, package):  # type: (Package) -> List[Link]

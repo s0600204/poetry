@@ -1423,7 +1423,16 @@ class VirtualEnv(Env):
         )
 
         output = self.run_python_script(script)
+        """
+        from distutils.core import Distribution
+        outer = Distribution().get_command_obj('config').try_compile('#ifndef _MSC_VER\n#error "Not MSVC"\n#endif\n#error "is MSVC"')
+        print(f"\nO :: {outer}")
 
+        inner = self.run_python_script(
+            "from distutils.core import Distribution; print(Distribution().get_command_obj('config').try_compile('#ifndef _MSC_VER\\n#error \"Not MSVC\"\\n#endif\\n#error \"is MSVC\"'))"
+        )
+        print(f"\nI :: {inner}")
+        """
         return [Tag(*t) for t in json.loads(output)]
 
     def get_marker_env(self):  # type: () -> Dict[str, Any]
